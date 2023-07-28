@@ -1,0 +1,340 @@
+/**
+ * Created by holdmann on 10.07.17.
+ */
+
+(function ( $ ) {
+
+    var dealersMap;
+    var dealersMapClusterer;
+    var dealersMapGeoObjects = [];
+
+    var ajaxUrl = '/local/templates/ltk/components/bitrix/news/dealers/bitrix/news.list/.default/ajax.php';
+
+    console.log(window['DEALERS_TEMPLATE_PATH']);
+    console.log(window.DEALERS_TEMPLATE_PATH);
+
+
+    // ajax search by typing a letters
+
+    $(document).on(
+        'keyup',
+        '.dealers-search.ajax-search',
+        function (e) {
+
+            clearTimeout($.data(this, 'ajax-search-timer'));
+            var wait = setTimeout(doAjaxSearch, 500, $(this));
+            $(this).data('ajax-search-timer', wait);
+
+        });
+
+    var doAjaxSearch = function($searchInput)
+    {
+        var queryString = $searchInput.val();
+
+        if (queryString.length < 3) {
+            return;
+        }
+
+        $searchInput.parents('form.dealers-list-search').submit();
+
+        return;
+        console.log(_this);
+        var queryString = _this.val(),
+            $form = _this.parents('form');
+
+
+
+
+
+
+        _this.parents('.search-form').addClass('show-loading');
+
+        /**
+         * Убиваем предыдущий запрос,
+         * ответ сервера нам не интересен в данном случае.
+         */
+        if (typeof searchXHR !== 'undefined') {
+            searchXHR.abort();
+        }
+
+        searchXHR = $.post(
+            '/local/templates/activemate2/components/bitrix/catalog/catalog/search.ajax.php',
+            {
+                q: queryString
+            },
+            function (result) {
+                try {
+                    var data = BX.parseJSON(result);
+                    if (data.length > 0) {
+
+                        $container = $('<div class="search-mid-results" />');
+                        $resultsList = $('<div class="results-list" />');
+
+                        // sometimes returns more than 4 elements,
+                        // so slice it.
+                        data = data.slice(0, 4);
+
+                        $.each(data, function(idx, item) {
+
+                            $item = createSearchTipsItem(item);
+
+                            $resultsList.append($item);
+                        });
+
+
+                        $container.append($resultsList);
+
+                        $total = $('<div class="total"/>');
+                        $link = $('<a />').addClass('ui-btn ui-btn_border-orange').text('Все результаты');
+                        $link.attr('href', $form.attr('action') + '?q=' + queryString);
+
+                        $total.append($link);
+                        $container.append($total);
+
+                        if ($('.searchbox.searchbox_header .search-mid-results').length > 0) {
+                            $('.searchbox.searchbox_header .search-mid-results').replaceWith($container);
+                        } else {
+
+                            var $body = $('body'),
+                                $layoutOverlay = $('.layoutOverlay');
+
+                            if ( $body.css('overflow') === 'hidden' ) {
+                                $body.css('overflow', 'auto');
+                            } else {
+                                $body.css('overflow', 'hidden');
+                            }
+
+                            var topOffset = $('.header').outerHeight();
+
+                            if ( $layoutOverlay.length ) {
+                                $layoutOverlay.remove();
+                            } else {
+                                $(".searchbox.searchbox_header").parent().append(
+                                    $('<div class="layoutOverlay searchResultsOverlay"/>').css({
+                                        position: 'fixed',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        zIndex: 99,
+                                        background: 'rgba(58, 66, 75, 0.63)'
+                                    })
+                                );
+                            }
+
+                            $('.searchbox.searchbox_header').append($container).addClass('showed-results');
+                        }
+
+                    } else {
+                        removeSearchTipsAll();
+                    }
+                } catch (ex) {
+
+                }
+
+            }).always(function() {
+            _this.parents('.search-form').removeClass('show-loading');
+        });
+    };
+
+
+    console.log('loaded');
+
+    var getDealersAjaxData = function()
+    {
+        var requestData = {};
+
+        var activeTypes = [];
+        $('.map-legend a').each(function(index){
+            if ($(this).hasClass('active')) {
+                activeTypes.push($(this).data('type-id'));
+            }
+        });
+
+        if (activeTypes.length > 0) {
+            requestData.type_id = activeTypes;
+        }
+
+        var sectionId = $('.map-select > .item.active > a').data('section-id');
+
+        if (sectionId > 0) {
+            requestData.section_id = sectionId;
+        }
+
+        var searchFormValue = $('form.dealers-list-search input[name=q]').val();
+
+        if (searchFormValue.length > 0) {
+            requestData.q = searchFormValue;
+        }
+
+        return requestData;
+    };
+
+
+    $(document).on(
+        'click',
+        '.map-legend_ a',
+        function (e) {
+            e.preventDefault();
+
+            $(this).toggleClass('active');
+
+            initializeMap();
+        });
+
+
+    $(document).on(
+        'click',
+        '.map-select_ .item',
+        function (e) {
+            e.preventDefault();
+
+            $('.map-select .item').removeClass('active');
+            $(this).addClass('active');
+
+            initializeMap();
+        });
+
+    $(document).on(
+        'submit',
+        'form.dealers-list-search_',
+        function (e) {
+            e.preventDefault();
+
+            initializeMap();
+        });
+
+    // initialize dealers map
+    ymaps.ready(function(){
+        dealersMap = new ymaps.Map('map_dealers', {
+            center: [1, 1],
+            zoom: 1
+        });
+
+        dealersMapClusterer = new ymaps.Clusterer({
+            // Макет метки кластера pieChart.
+            clusterIconLayout: 'default#pieChart',
+            // Радиус диаграммы в пикселях.
+            clusterIconPieChartRadius: 25,
+            // Радиус центральной части макета.
+            clusterIconPieChartCoreRadius: 10,
+            // Ширина линий-разделителей секторов и внешней обводки диаграммы.
+            clusterIconPieChartStrokeWidth: 3,
+            // Определяет наличие поля balloon.
+            hasBalloon: false
+        });
+
+        dealersMapClusterer.add(dealersMapGeoObjects);
+        dealersMap.geoObjects.add(dealersMapClusterer);
+
+        initializeMap();
+    });
+
+    var initializeMap = function() {
+
+        $.ajax({
+            url: ajaxUrl,
+            dataType: 'json',
+            data: getDealersAjaxData()
+        })
+            .done(function( result ) {
+
+                dealersMapClusterer.remove(dealersMapGeoObjects);
+
+                dealersMapGeoObjects = [];
+
+                for ( var pointID in result.GEO_OBJECTS ) {
+
+                    point = result.GEO_OBJECTS[pointID];
+
+                    placemark = new ymaps.Placemark([point.LON, point.LAT], {
+
+                        balloonContentHeader: point.CAPTION,
+                        balloonContentBody: BX.util.htmlspecialcharsback(point.DESCRIPTION)
+                    }, {
+                        preset: 'islands#circleIcon',
+                        iconColor: point.COLOR
+                    });
+
+                    dealersMapGeoObjects.push(placemark);
+                }
+
+                dealersMapClusterer.add(dealersMapGeoObjects);
+                dealersMap.geoObjects.add(dealersMapClusterer);
+
+
+                dealersMap.setBounds(dealersMap.geoObjects.getBounds());
+
+                var realZoom = dealersMap.getZoom() > 19 ? 19 : dealersMap.getZoom();
+
+                if (dealersMapGeoObjects.length == 1) {
+                    realZoom = 12;
+                }
+
+                dealersMap.setZoom(realZoom-0.4);
+
+                // заменяем данные
+
+
+                var $container = $('.address-block .address-list');
+                //$container.empty();
+
+                var listDealers = result.GEO_OBJECTS.slice(0, 20);
+
+                for ( var dealerID in listDealers ) {
+
+                    var dealer = listDealers[dealerID];
+
+                    var $addressListItem = $('<div class="address-list__item">');
+
+                    $addressListItem.append(
+                        $('<div class="name">').html(dealer.CAPTION)
+                    );
+
+                    $addressListItem.append(
+                        $('<div class="address">').html(dealer.EXTRA.ADDRESS)
+                    );
+
+                    if (dealer.EXTRA.PHONES && dealer.EXTRA.PHONES.length > 0) {
+                        $addressListItem.append(
+                            $('<div class="phones">').html('Тел.: ' + dealer.EXTRA.PHONES.join(', '))
+                        );
+                    }
+
+                    var $addressListItemWeb = $('<div class="web">');
+
+                    if (dealer.EXTRA.EMAILS && dealer.EXTRA.EMAILS.length > 0) {
+                        jQuery.each(dealer.EXTRA.EMAILS, function (idx, value) {
+                            $addressListItemWeb.append(
+                                $('<a />').text(value).attr('href', 'mailto:' + value)
+                            );
+                        });
+                    }
+
+                    if (dealer.EXTRA.WEBSITES && dealer.EXTRA.WEBSITES.length > 0) {
+                        jQuery.each(dealer.EXTRA.WEBSITES, function (idx, value) {
+                            $addressListItemWeb.append(
+                                $('<a />').text(value).attr('href', 'http://:' + value)
+                            );
+                        });
+                    }
+
+                    $addressListItem.append(
+                        $('<div class="web">').html($addressListItemWeb)
+                    );
+
+
+                    //$container.append($addressListItem);
+
+                }
+
+                $('.address-list-refresh.refresh a').attr('href', result.SHOW_MORE_LINK);
+
+                app.shy();
+            });
+    };
+
+
+}( jQuery ));
+
+

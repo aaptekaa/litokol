@@ -1,0 +1,3 @@
+$(document).on("click", "#show_translation", function(){
+    $("#montolit__picture-desc_translate").toggleClass("hidden");
+});

@@ -1,0 +1,17 @@
+
+
+/* Start:/local/templates/ltk/components/artofbx/anyhtml/block_about__other/style.css?1530185238212*/
+.about-pics2 .pic1{
+	float: left;
+	width: calc(33% - 10px);
+	margin-right: 20px;
+}
+.about-pics2 .pic2{
+	float: left;
+	width: calc(66% - 10px);
+}
+.sidebar-menu .name-block{
+	font-size: 22px!important;
+}
+/* End */
+/* /local/templates/ltk/components/artofbx/anyhtml/block_about__other/style.css?1530185238212 */

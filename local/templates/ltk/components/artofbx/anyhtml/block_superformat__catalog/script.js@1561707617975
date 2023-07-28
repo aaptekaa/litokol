@@ -1,0 +1,35 @@
+$(document).ready(function(){
+    $(document).on("click", "#montolit__cat_oborud_btn > a", function(e){
+        e.preventDefault();
+        $(this).parent().toggleClass("active");
+    });
+
+    $("#tabs_content .tabs_tab").hide();
+    var set_id = $("#tabs_controls li.active.set a").attr("href");
+    set_active_tab(set_id);
+
+    $(document).on("click", "#tabs_controls a", function(e){
+        e.preventDefault();
+        set_id = $(this).attr("href");
+
+        if(set_id != 'undefined' && set_id != '#') {
+            console.log(set_id);
+
+            clear_tabs();
+            set_active_tab(set_id);
+
+            $(this).parents("li").addClass("active");
+            $(this).addClass("active");
+            $(this).addClass("set");
+        }
+    });
+});
+
+function set_active_tab(id){
+    $(id).show();
+}
+function clear_tabs(){
+    $("#tabs_content .tabs_tab").hide();
+    $("#tabs_controls li").removeClass("active");
+    $("#tabs_controls li a").removeClass("active");
+}

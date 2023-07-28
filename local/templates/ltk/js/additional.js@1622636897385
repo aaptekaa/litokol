@@ -1,0 +1,13 @@
+$(document).ready(function(){
+    var objParams = {
+        marginTop: $('.header-top.scroll-to-fixed-fixed').outerHeight(true) + 10,
+        limit: 	function() {
+            var limit = $('footer.footer').offset().top - $(this).outerHeight(true) - 10;
+            return limit;
+        },
+        zIndex: 20
+    };
+    $(".left-side .sidebar-menu").scrollToFixed(objParams);
+
+    
+});

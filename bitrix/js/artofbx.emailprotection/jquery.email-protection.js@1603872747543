@@ -1,0 +1,19 @@
+if(typeof jQuery !== 'undefined'){
+	(function( $ ) {	
+		$(document).ready(function () {
+
+			var $body = $('body'),
+				emailRegExp = /([a-z0-9_-]+\.)*[a-z0-9_-]+@[a-z0-9_-]+(\.[a-z0-9_-]+)*\.[a-z]{2,6}/gim;
+
+
+			if (!$body.hasClass('admin-mode') && !$('#bx-panel').length) {
+				$body.html($body.html().replace(emailRegExp, function (t) {
+
+					return t.replace(/[A-Za-z]/g, function (c) {
+						return String.fromCharCode((((c = c.charCodeAt(0)) & 223) - 52) % 26 + (c & 32) + 65);
+					})
+				}));
+			}
+		});
+	})(jQuery);
+}

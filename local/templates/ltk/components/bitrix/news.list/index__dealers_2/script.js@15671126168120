@@ -1,0 +1,259 @@
+/**
+ * Created by holdmann on 10.07.17.
+ */
+
+(function ( $ ) {
+
+    var dealersMap;
+    var dealersMapClusterer;
+    var dealersMapGeoObjects = [];
+
+    // ajax search by typing a letters
+
+    $(document).on(
+        'keyup',
+        '.dealers-search.ajax-search',
+        function (e) {
+
+            clearTimeout($.data(this, 'ajax-search-timer'));
+            var wait = setTimeout(doAjaxSearch, 500, $(this));
+            $(this).data('ajax-search-timer', wait);
+
+        });
+
+    var doAjaxSearch = function($searchInput)
+    {
+        var queryString = $searchInput.val();
+
+        if (queryString.length < 3) {
+            return;
+        }
+
+        $searchInput.parents('form.dealers-list-search').submit();
+    };
+
+
+    var getDealersAjaxData = function()
+    {
+        var requestData = NEWS_LIST__DEALERS__AJAX_EXTRA_PARAMS;
+
+        var activeTypes = [];
+        $('.map-legend a').each(function(index){
+            if ($(this).hasClass('active')) {
+                activeTypes.push($(this).data('type-id'));
+            }
+        });
+
+        if (activeTypes.length > 0) {
+            requestData.type_id = activeTypes;
+        }
+
+        var sectionId = $('.map-select > .item.active > a').data('section-id');
+
+        if (sectionId > 0) {
+            requestData.section_id = sectionId;
+        }
+
+        var searchFormValue = $('form.dealers-list-search input[name=q]').val();
+
+        if (searchFormValue.length > 0) {
+            requestData.q = searchFormValue;
+        }
+
+        return requestData;
+    };
+
+
+    $(document).on(
+        'click',
+        '.map-legend a',
+        function (e) {
+            e.preventDefault();
+
+            $(this).toggleClass('active');
+
+            initializeMap();
+        });
+
+
+    $(document).on(
+        'click',
+        '.map-select_ .item',
+        function (e) {
+            e.preventDefault();
+
+            $('.map-select .item').removeClass('active');
+            $(this).addClass('active');
+
+            initializeMap();
+        });
+
+    $(document).on(
+        'submit',
+        'form.dealers-list-search',
+        function (e) {
+            e.preventDefault();
+
+            initializeMap();
+        });
+
+    // initialize dealers map
+    ymaps.ready(function(){
+        dealersMap = new ymaps.Map('map_dealers', {
+            center: [1, 1],
+            zoom: 1
+        });
+
+        dealersMapClusterer = new ymaps.Clusterer({
+            // Макет метки кластера pieChart.
+            clusterIconLayout: 'default#pieChart',
+            // Радиус диаграммы в пикселях.
+            clusterIconPieChartRadius: 25,
+            // Радиус центральной части макета.
+            clusterIconPieChartCoreRadius: 10,
+            // Ширина линий-разделителей секторов и внешней обводки диаграммы.
+            clusterIconPieChartStrokeWidth: 3,
+            // Определяет наличие поля balloon.
+            hasBalloon: false
+        });
+
+        dealersMapClusterer.add(dealersMapGeoObjects);
+        dealersMap.geoObjects.add(dealersMapClusterer);
+
+        initializeMap();
+    });
+
+    var initializeMap = function() {
+
+        $.ajax({
+            url: NEWS_LIST__DEALERS__URL_AJAX,
+            dataType: 'json',
+            data: getDealersAjaxData()
+        })
+            .done(function( result ) {
+
+                dealersMapClusterer.remove(dealersMapGeoObjects);
+
+                dealersMapGeoObjects = [];
+
+                for ( var pointID in result.GEO_OBJECTS ) {
+
+                    point = result.GEO_OBJECTS[pointID];
+
+                    placemark = new ymaps.Placemark([point.LON, point.LAT], {
+
+                        balloonContentHeader: point.CAPTION,
+                        balloonContentBody: BX.util.htmlspecialcharsback(point.DESCRIPTION)
+                    }, {
+                        preset: 'islands#circleIcon',
+                        iconColor: point.COLOR
+                    });
+
+                    dealersMapGeoObjects.push(placemark);
+                }
+
+                dealersMapClusterer.add(dealersMapGeoObjects);
+                dealersMap.geoObjects.add(dealersMapClusterer);
+
+
+                dealersMap.setBounds(dealersMap.geoObjects.getBounds());
+
+                var realZoom = dealersMap.getZoom() > 19 ? 19 : dealersMap.getZoom();
+
+                if (dealersMapGeoObjects.length == 1) {
+                    realZoom = 12;
+                }
+
+                dealersMap.setZoom(realZoom-0.4);
+
+                // заменяем данные
+
+
+                var $container = $('.address-block .address-list-new');
+                $container.empty();
+
+                var listDealers = result.GEO_OBJECTS.slice(0, NEWS_LIST__DEALERS__AJAX_EXTRA_PARAMS.NEWS_COUNT);
+
+                for ( var dealerID in listDealers ) {
+
+                    var dealer = listDealers[dealerID];
+
+                    var $addressListItem = $('<div class="address-list-new__item">');
+
+                    $addressListItem.append(
+                        $('<div class="address-list-new__item-name">').html(dealer.CAPTION)
+                    );
+
+
+                    var $addressListItemTags = $('<div class="address-list-new__tags">');
+                    if (dealer.EXTRA.TYPE_TAGS && dealer.EXTRA.TYPE_TAGS.length > 0) {
+
+                        jQuery.each(dealer.EXTRA.TYPE_TAGS, function (idx, value) {
+                            $addressListItemTags.append(
+                                $('<div class="address-list-new__tags-item type1" />')
+                                    .text(value.NAME)
+                                    .css({'background-color' : value.COLOR})
+                            );
+                        });
+
+                        $addressListItem.append($addressListItemTags);
+                    }
+
+                    $addressListItem.append(
+                        $('<div class="address-list-new__item-address">').html(dealer.EXTRA.ADDRESS)
+                    );
+
+                    var $addressListItemPhone = $('<div class="address-list-new__item-phone address-list-new__item-empty">');
+
+                    if (dealer.EXTRA.PHONES && dealer.EXTRA.PHONES.length > 0) {
+
+                        $addressListItemPhone.removeClass('address-list-new__item-empty');
+
+                        $addressListItem.append(
+                            $addressListItemPhone.html(dealer.EXTRA.PHONES.join(',<br />'))
+                        );
+                    }
+
+                    var $addressListItemEmail = $('<div class="address-list-new__item-mail address-list-new__item-empty">');
+
+                    if (dealer.EXTRA.EMAILS && dealer.EXTRA.EMAILS.length > 0) {
+
+                        $addressListItemEmail.removeClass('address-list-new__item-empty');
+
+                        jQuery.each(dealer.EXTRA.EMAILS, function (idx, value) {
+                            $addressListItemEmail.append(
+                                $('<a />').text(value).attr('href', 'mailto:' + value)
+                            );
+                        });
+                    }
+                    $addressListItem.append($addressListItemEmail);
+
+                    var $addressListItemWeb = $('<div class="address-list-new__item-site address-list-new__item-empty">');
+
+                    if (dealer.EXTRA.WEBSITES && dealer.EXTRA.WEBSITES.length > 0) {
+
+                        $addressListItemWeb.removeClass('address-list-new__item-empty');
+
+                        jQuery.each(dealer.EXTRA.WEBSITES, function (idx, value) {
+                            $addressListItemWeb.append(
+                                $('<a />').text(value).attr('href', 'http://:' + value)
+                            );
+                        });
+                    }
+                    $addressListItem.append($addressListItemWeb);
+
+
+                    $container.append($addressListItem);
+
+                }
+
+                $('.address-list-refresh.refresh a').attr('href', result.SHOW_MORE_LINK);
+
+                app.shy();
+            });
+    };
+
+
+}( jQuery ));
+
+

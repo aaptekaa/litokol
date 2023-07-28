@@ -1,0 +1,71 @@
+
+
+/* Start:/local/templates/ltk/components/bitrix/news.list/vebinary/style.css?15882403111373*/
+.academy_webinars__item{
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 15px;
+    justify-content: space-between;
+    background-color: #f4f4f4;
+    padding:10px;
+}
+.academy_webinars__item .button_block{
+    flex-basis: 200px;
+    text-align: right;
+    display: flex;
+}
+.academy_webinars__item .btn{
+    margin-left: 30px;
+    width: 170px;
+    align-self: center;
+}
+.block_academy__webinar{
+    padding: 20px 0px;
+}
+.block_academy__webinar_wrapper{
+    margin: 0 0 30px;
+}
+.block_academy__webinar_wrapper::before,
+.block_academy__webinar_wrapper::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    border-top: 1px solid #ee2a24;
+    height: 0;
+}
+.academy_webinars__description{
+    flex-grow: 1;
+}
+.aaaa{
+    font-size: 14px;
+    color: #707070;
+}
+.h2-sub{
+    font-size: 18px;
+    font-family: 'PT Sans', "Times New Roman", Times, serif;
+    font-weight: 700;
+    color: #373737;
+    margin-bottom: 8px;
+}
+@media (max-width: 500px){
+    .academy_webinars__item{
+        display: block;
+    }
+    .button_block{
+        margin: 20px 0;
+    }
+    .button_block a{
+        margin: 0 auto!important;
+    }
+
+    .sidebar-menu .name-block-legend{
+        font-size: 18px;
+    }
+}
+.academy_webinars__description_text{
+    margin: 0 0 10px;
+}
+/* End */
+/* /local/templates/ltk/components/bitrix/news.list/vebinary/style.css?15882403111373 */

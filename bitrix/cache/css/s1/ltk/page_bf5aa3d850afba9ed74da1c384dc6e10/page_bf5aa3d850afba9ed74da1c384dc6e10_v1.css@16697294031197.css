@@ -1,0 +1,45 @@
+
+
+/* Start:/local/templates/ltk/components/artofbx/anyhtml/block_academy__webinar/style.css?1588072660527*/
+.block_academy__webinar{
+    padding: 20px 0px;
+}
+.block_academy__webinar_wrapper{
+    margin: 0 0 30px;
+}
+.block_academy__webinar_wrapper::before,
+.block_academy__webinar_wrapper::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    border-top: 1px solid #ee2a24;
+    height: 0;
+}
+.goto_webinars_page > a{
+    text-transform: uppercase;
+    display: block;
+    margin:10px auto;
+    width: fit-content;
+    font-weight: bold;
+    padding: 6px 30px;
+}
+/* End */
+
+
+/* Start:/local/templates/ltk/components/artofbx/anyhtml/block_academy__in_numbers/style.css?1653307573224*/
+.seminar__title {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    font-size: 24px;
+    height: 100px;
+    padding: 0 75px !important;
+}
+.seminar__list {
+    padding: 0 70px 40px 70px !important;
+}
+/* End */
+/* /local/templates/ltk/components/artofbx/anyhtml/block_academy__webinar/style.css?1588072660527 */
+/* /local/templates/ltk/components/artofbx/anyhtml/block_academy__in_numbers/style.css?1653307573224 */

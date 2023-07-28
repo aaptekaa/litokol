@@ -1,0 +1,14 @@
+$(document).ready(function(){
+    if(window.matchMedia('(max-width: 767px)').matches) {
+        $(document).scroll(function () {
+            if ($(this).scrollTop() > 200) {
+                $('#to_top').fadeIn();
+            } else {
+                $('#to_top').fadeOut();
+            }
+        });
+        $('#to_top').click(function () {
+            $('body,html').animate({scrollTop: 0}, 800);
+        });
+    }
+});

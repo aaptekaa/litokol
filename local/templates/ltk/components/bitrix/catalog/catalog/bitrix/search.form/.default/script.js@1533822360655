@@ -1,0 +1,33 @@
+/**
+ * Created by holdmann on 10.07.17.
+ */
+
+(function ( $ ) {
+
+    // ajax search by typing a letters
+
+    $(document).on(
+        'keyup',
+        '.catalog-search.ajax-search',
+        function (e) {
+
+            clearTimeout($.data(this, 'ajax-search-timer'));
+            var wait = setTimeout(doAjaxSearch, 1000, $(this));
+            $(this).data('ajax-search-timer', wait);
+
+        });
+
+    var doAjaxSearch = function($searchInput)
+    {
+        var queryString = $searchInput.val();
+
+        if (queryString.length < 3) {
+            return;
+        }
+
+        $searchInput.parents('form.catalog-search-form').submit();
+    };
+
+}( jQuery ));
+
+

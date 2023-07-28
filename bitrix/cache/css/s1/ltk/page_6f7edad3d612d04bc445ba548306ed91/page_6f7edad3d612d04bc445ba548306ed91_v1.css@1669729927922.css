@@ -1,0 +1,27 @@
+
+
+/* Start:/local/templates/ltk/components/bitrix/news/projects/bitrix/catalog.smart.filter/.default/style.css?1574413215664*/
+.filter-block.new-filter .panel .list-group ul li.active .act,
+.filter-block.new-filter .panel .list-group ul li a{
+	width: 100%;
+}
+.filter-block.new-filter .panel .list-group ul li a{
+	padding-right: 12px!important;
+}
+.filter-block.new-filter .panel .list-group ul li a span{
+	padding-right: 0!important;
+}
+.filter-block.new-filter .panel .list-group ul li a em{
+	margin-left: 0!important;
+}
+.filter-block.new-filter.filter-block__form::before,
+.filter-block.new-filter.filter-block__form::after {
+	content: ""!important;
+	display: block!important;
+	position: relative!important;
+	border-top: 1px solid #ee2a24;
+	height: 0;
+	margin: 14px 0;
+}
+/* End */
+/* /local/templates/ltk/components/bitrix/news/projects/bitrix/catalog.smart.filter/.default/style.css?1574413215664 */
